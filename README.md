@@ -1,4 +1,6 @@
-# Documentation CTester
+# CTester
+
+[![Build Status](https://travis-ci.org/UCL-INGI/CTester.svg?branch=master)](https://travis-ci.org/UCL-INGI/CTester)
 
 CTester est une librairie permettant d'écrire simplement et rapidement des tests INGInious pour des exercices en C. Elle est basée sur CUnit et offre certaines fonctionnalités pratiques :
 

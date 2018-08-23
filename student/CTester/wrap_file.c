@@ -95,7 +95,7 @@ int __wrap_close(int fd){
 
 }
 
-int __wrap_read(int fd, void *buf, size_t count){
+ssize_t __wrap_read(int fd, void *buf, size_t count){
 
   if(!wrap_monitoring || !monitored.read) {
     return __real_read(fd,buf,count); 
@@ -120,7 +120,7 @@ int __wrap_read(int fd, void *buf, size_t count){
 }
 
 
-int __wrap_write(int fd, void *buf, size_t count){
+ssize_t __wrap_write(int fd, void *buf, size_t count){
 
   if(!wrap_monitoring || !monitored.write) {
     return __real_write(fd,buf,count); 

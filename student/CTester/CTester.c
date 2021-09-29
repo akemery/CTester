@@ -7,6 +7,10 @@
 #include <signal.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
@@ -17,17 +21,16 @@
 #define _(STRING) gettext(STRING)
 #include <dlfcn.h>
 #include <malloc.h>
-
-#include "wrap.h"
+#include "ebpf/utils.h"
 
 #define TAGS_NB_MAX 20
 #define TAGS_LEN_MAX 30
 
-extern bool wrap_monitoring;
-extern struct wrap_stats_t stats;
-extern struct wrap_monitor_t monitored;
-extern struct wrap_fail_t failures;
-extern struct wrap_log_t logs;
+//extern bool wrap_monitoring;
+//extern struct wrap_stats_t stats;
+//extern struct wrap_monitor_t monitored;
+//extern struct wrap_fail_t failures;
+//extern struct wrap_log_t logs;
 
 extern sigjmp_buf segv_jmp;
 
@@ -63,6 +66,8 @@ void set_test_metadata(char *problem, char *descr, unsigned int weight)
     test_metadata.weight = weight;
     strncpy(test_metadata.problem, problem, sizeof(test_metadata.problem));
     strncpy(test_metadata.descr, descr, sizeof(test_metadata.descr));
+    bpfctester_init();
+    bpfctester_register_proc(getpid());
 }
 
 void push_info_msg(char *msg)
@@ -105,19 +110,19 @@ void set_tag(char *tag)
 }
 
 void segv_handler(int sig, siginfo_t *unused, void *unused2) {
-    wrap_monitoring = false;
+    //wrap_monitoring = false;
     push_info_msg(_("Your code produced a segfault."));
     set_tag("sigsegv");
-    wrap_monitoring = true;
+    //wrap_monitoring = true;
     siglongjmp(segv_jmp, 1);
 }
 
 void alarm_handler(int sig, siginfo_t *unused, void *unused2)
 {
-    wrap_monitoring = false;
+    //wrap_monitoring = false;
     push_info_msg(_("Your code exceeded the maximal allowed execution time."));
     set_tag("timeout");
-    wrap_monitoring = true;
+    //wrap_monitoring = true;
     siglongjmp(segv_jmp, 1);
 }
 
@@ -140,7 +145,7 @@ int sandbox_begin()
     while ((n = read(usr_pipe_stdout[0], buf, BUFSIZ)) > 0);
     while ((n = read(usr_pipe_stderr[0], buf, BUFSIZ)) > 0);
 
-    wrap_monitoring = true;
+    //wrap_monitoring = true;
     return 0;
 }
 
@@ -151,7 +156,7 @@ void sandbox_fail()
 
 void sandbox_end()
 {
-    wrap_monitoring = false;
+    //wrap_monitoring = false;
 
     // Remapping stderr to the orignal one ...
     dup2(true_stdout, STDOUT_FILENO); // TODO
@@ -198,10 +203,10 @@ int clean_suite1(void)
 void start_test()
 {
     bzero(&test_metadata,sizeof(test_metadata));
-    bzero(&stats,sizeof(stats));
-    bzero(&failures,sizeof(failures));
-    bzero(&monitored,sizeof(monitored));
-    bzero(&logs,sizeof(logs));
+    //bzero(&stats,sizeof(stats));
+    //bzero(&failures,sizeof(failures));
+    //bzero(&monitored,sizeof(monitored));
+    //bzero(&logs,sizeof(logs));
 }
 
 int __real_exit(int status);
@@ -220,7 +225,6 @@ int run_tests(int argc, char *argv[], void *tests[], int nb_tests) {
     textdomain("tests");
 
     mallopt(M_PERTURB, 142); // newly allocated memory with malloc will be set to ~142
-
     // Code for detecting properly double free errors
     mallopt(M_CHECK_ACTION, 1); // don't abort if double free
     true_stderr = dup(STDERR_FILENO); // preparing a non-blocking pipe for stderr
@@ -239,7 +243,6 @@ int run_tests(int argc, char *argv[], void *tests[], int nb_tests) {
 
     /* make sure that we catch segmentation faults */
     struct sigaction sa;
-
     memset(&sa, 0, sizeof(sigaction));
     sigemptyset(&sa.sa_mask);
     static char stack[SIGSTKSZ];
@@ -266,29 +269,29 @@ int run_tests(int argc, char *argv[], void *tests[], int nb_tests) {
     if (!f_out)
         return -ENOENT;
 
-
     /* initialize the CUnit test registry */
     if (CUE_SUCCESS != CU_initialize_registry())
         return CU_get_error();
-
+        
     /* add a suite to the registry */
     pSuite = CU_add_suite("Suite_1", init_suite1, clean_suite1);
     if (NULL == pSuite) {
         CU_cleanup_registry();
         return CU_get_error();
     }
+    
 
     for (int i=0; i < nb_tests; i++) {
         Dl_info  DlInfo;
+        
         if (dladdr(tests[i], &DlInfo) == 0)
             return -EFAULT;
-
+            
         CU_pTest pTest;
-        if ((pTest = CU_add_test(pSuite, DlInfo.dli_sname, tests[i])) == NULL) {
+        if ((pTest = CU_add_test(pSuite, "Run test for", tests[i])) == NULL) {
                 CU_cleanup_registry();
                 return CU_get_error();
         }
-
         printf("\n==== Results for test %s : ====\n", DlInfo.dli_sname);
 
         start_test();
@@ -350,4 +353,14 @@ int run_tests(int argc, char *argv[], void *tests[], int nb_tests) {
     //CU_automated_run_tests();
     CU_cleanup_registry();
     return CU_get_error();
+}
+
+/** eBPF calls**/
+
+void monitored(int syscall){
+    bpfctester_enable_syscall(syscall);
+}
+
+void getstats(int syscall){
+    bpfctester_getstats(syscall);
 }

@@ -10,11 +10,10 @@
 #include "bpfctester.h"
 #include "core.h"
 #include "bpfctester.skel.h"
-#include "../CTesterLib/CTester_vbpf.h"
+
 
 struct ring_buffer *rb = NULL;
-struct bpfctester_bpf *skel;
-volatile process_metadata* process = NULL; // monitored process 
+struct bpfctester_bpf *skel; 
 
 static struct env {
     bool verbose;

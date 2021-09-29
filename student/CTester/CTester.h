@@ -2,11 +2,13 @@
 #include <CUnit/CUnit.h>
 #include <setjmp.h>
 
-#include "wrap.h"
-#include "trap.h"
+//#include "wrap.h"
+//#include "trap.h"
 
 #include <libintl.h>
 #include <locale.h>
+
+
 #define _(STRING) gettext(STRING)
 
 #define RUN(...) void *ptr_tests[] = {__VA_ARGS__}; return run_tests(argc, argv, ptr_tests, sizeof(ptr_tests)/sizeof(void*))
@@ -31,13 +33,16 @@ void set_tag(char *tag);
 
 
 // Set to true to enable monitoring features
-bool wrap_monitoring = false;
+//bool wrap_monitoring = false;
 
-struct wrap_stats_t stats;
-struct wrap_monitor_t monitored;
-struct wrap_fail_t failures;
-struct wrap_log_t logs;
+//struct wrap_stats_t stats;
+//struct wrap_monitor_t monitored;
+//struct wrap_fail_t failures;
+//struct wrap_log_t logs;
 
 int stdout_cpy, stderr_cpy;
 
 sigjmp_buf segv_jmp;
+
+void monitored(int syscall);
+void getstats(int syscall);

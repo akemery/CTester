@@ -11,6 +11,12 @@ CTester est une librairie permettant d'écrire simplement et rapidement des test
 - Interdiction d'utiliser des fonctions spécifiques
 -   Support de l'internationalisation via gettext 
 
+## Get libbpf
+
+```
+git submodule init && git submodule update
+```
+
 ## Introduction
 
 Toute suite de tests pour un exercice C utilisant CTester respecte l'arborescence suivante :

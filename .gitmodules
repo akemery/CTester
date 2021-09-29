@@ -1,0 +1,3 @@
+[submodule "student/CTester/ebpf/libbpf"]
+	path = student/CTester/ebpf/libbpf
+	url = git@github.com:libbpf/libbpf.git

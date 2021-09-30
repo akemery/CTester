@@ -14,7 +14,8 @@ int bpfctester_disable_syscall(int syscall);
 void begin_sandbox(void);
 void end_sandbox(void);
 
-int bpfctester_init_stats(void);
+int bpfctester_init_kernel_data(void);
+void release_resource(void);
 
 struct stats {
    struct stats_open open;

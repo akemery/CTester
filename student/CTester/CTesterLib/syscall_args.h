@@ -13,14 +13,14 @@ struct syscall_exit_open_args{
     unsigned long long unused;
     long __syscall_nr;
     long long ret;
-    int ncalled;   
+    int called;   
 };
 
 struct stats_open{
     unsigned long long unused;
-    struct syscall_enter_open_args lastparams;
+    struct syscall_enter_open_args last_params;
     long long lastret;
-    int ncalled;    
+    int called;    
 };
 
 struct syscall_enter_creat_args{
@@ -38,9 +38,9 @@ struct syscall_exit_creat_args{
 
 struct stats_creat{
     unsigned long long unused;
-    struct syscall_enter_creat_args lastparams;
+    struct syscall_enter_creat_args last_params;
     long long lastret;
-    int ncalled;    
+    int called;    
 };
 
 struct syscall_enter_close_args{
@@ -57,9 +57,9 @@ struct syscall_exit_close_args{
 
 struct stats_close{
     unsigned long long unused;
-    struct syscall_enter_close_args lastparams;
+    struct syscall_enter_close_args last_params;
     long long lastret;
-    int ncalled;    
+    int called;    
 };
 
 struct syscall_enter_read_args{
@@ -78,9 +78,9 @@ struct syscall_exit_read_args{
 
 struct stats_read{
     unsigned long long unused;
-    struct syscall_enter_read_args lastparams;
+    struct syscall_enter_read_args last_params;
     long long lastret;
-    int ncalled;    
+    int called;    
 };
 
 struct syscall_enter_write_args{
@@ -100,9 +100,9 @@ struct syscall_exit_write_args{
 };
 
 struct stats_write {
-    struct syscall_enter_write_args lastparams;
+    struct syscall_enter_write_args last_params;
     long long lastret;
-    int ncalled;    
+    int called;    
 };
 
 struct syscall_enter_stat_args{
@@ -120,9 +120,9 @@ struct  syscall_exit_stat_args{
 
 struct stats_stat{
     unsigned long long unused;
-    struct syscall_enter_stat_args lastparams;
+    struct syscall_enter_stat_args last_params;
     long long lastret;
-    int ncalled;    
+    int called;    
 };
 
 struct syscall_enter_fstat_args{
@@ -140,9 +140,9 @@ struct syscall_exit_fstat_args{
 
 struct stats_fstat{
     unsigned long long unused;
-    struct syscall_enter_fstat_args lastparams;
+    struct syscall_enter_fstat_args last_params;
     long long lastret;
-    int ncalled;    
+    int called;    
 };
 
 struct syscall_enter_lseek_args{
@@ -160,9 +160,9 @@ struct syscall_exit_lseek_args{
 };
 
 struct stats_lseek{
-    struct syscall_enter_lseek_args lastparams;
+    struct syscall_enter_lseek_args last_params;
     int lastret;
-    int ncalled;    
+    int called;    
 };
 
 struct syscall_enter_getpid_args{
@@ -177,7 +177,7 @@ struct syscall_exit_getpid_args{
 
 struct stats_getpid{
     int lastret;
-    int ncalled;    
+    int called;    
 };
 
 

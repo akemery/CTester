@@ -53,7 +53,6 @@ int bpfctester_init(){
 }
 
 int bpfctester_cleanup(){
-   ring_buffer__free(rb);
    bpfctester_bpf__destroy(skel);
    return 0;
 }
@@ -104,7 +103,7 @@ static int init_sandbox(){
     return 0;
 }
 
-int bpfctester_init_stats(void){
+int bpfctester_init_kernel_data(void){
    stats = (struct stats*) &skel->bss->ctester_stats;
    monitored = (struct monitored*) &skel->bss->ctester_cfg;
    return 0;

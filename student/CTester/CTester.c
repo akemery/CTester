@@ -46,6 +46,8 @@ struct itimerval it_val;
 
 CU_pSuite pSuite = NULL;
 
+static bool bpf_initialized = false;
+
 
 struct info_msg {
     char *msg;
@@ -69,9 +71,12 @@ void set_test_metadata(char *problem, char *descr, unsigned int weight)
     test_metadata.weight = weight;
     strncpy(test_metadata.problem, problem, sizeof(test_metadata.problem));
     strncpy(test_metadata.descr, descr, sizeof(test_metadata.descr));
-    bpfctester_init();
-    bpfctester_register_proc(getpid());
-    bpfctester_init_stats();
+    if(!bpf_initialized){
+        bpfctester_init();
+        bpfctester_register_proc(getpid());
+        bpfctester_init_kernel_data();
+        bpf_initialized = true;
+    }
 }
 
 void push_info_msg(char *msg)
@@ -357,4 +362,8 @@ int run_tests(int argc, char *argv[], void *tests[], int nb_tests) {
     //CU_automated_run_tests();
     CU_cleanup_registry();
     return CU_get_error();
+}
+
+void release_resource(void){
+    bpfctester_cleanup();
 }

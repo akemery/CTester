@@ -33,16 +33,38 @@ void test_myfunc_ret() {
     end_sandbox();
     
     fprintf(stderr, "%d %d %llu, %d\n", stats->write.called, stats->getpid.called, stats->write.last_params.fd, monitored->write);
-    bpfctester_cleanup();
+    //bpfctester_cleanup();
     CU_ASSERT_EQUAL(ret,25);
 }
 
 
+void test_myfunc2_ret() {
+    set_test_metadata("myfunc2", _("Brief description of the test"), 2);
+
+    int ret = 0, fd;
+    
+    monitored->creat = true;
+    monitored->read = true;
+    monitored->write = true;
+    monitored->close = true;
+    monitored->getpid = false;
+    begin_sandbox();
+    fd = my_creat_func();
+    ret = my_write_func(fd);
+    ret = my_read_func(fd);
+    my_close_func(fd);
+    ret = my_getpid_func();
+    end_sandbox();
+    
+    fprintf(stderr, "%d %d %llu, %d\n", stats->write.called, stats->getpid.called, stats->write.last_params.fd, monitored->write);
+    release_resource();
+    CU_ASSERT_EQUAL(ret,25);
+}
 
 
 int main(int argc,char** argv){
     BAN_FUNCS();
-    RUN(test_myfunc_ret);
+    RUN(test_myfunc_ret, test_myfunc2_ret);
     return 0;
 }
 

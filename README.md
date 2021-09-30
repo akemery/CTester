@@ -99,17 +99,17 @@ void test_pop()
 	struct LL *linked_list = ...;
 	void *last_item = (void *) linked_list->last;
 
-	monitored.free=true;
-	SANDBOX_BEGIN;
+	monitored->free=true;
+	begin_sandbox();
 	pop(linked_list);
-	SANDBOX_END;
+	end_sandbox();
 
-	CU_ASSERT_EQUAL(stats.free.called, 1);
-	CU_ASSERT_EQUAL(stats.free.last_params.ptr, last_item);
+	CU_ASSERT_EQUAL(stats->free.called, 1);
+	CU_ASSERT_EQUAL(stats->free.last_params.ptr, last_item);
 }
 ```
 
-Tous les appels systèmes enregistrent le nombre d'appels (`stats.FUNC.called`), le dernier ensemble d'arguments utilisés (`stats.FUNC.last_params.ARG`, se référer aux fichiers header cités ci-dessus pour les noms des arguments de chaque appel), et l'éventuelle dernière valeur de retour (`stats.FUNC.last_return`). Pour des appels systèmes modifiant un buffer, celui-ci est également enregistré (voir par exemple `fstat`).
+Tous les appels systèmes enregistrent le nombre d'appels (`stats->FUNC.called`), le dernier ensemble d'arguments utilisés (`stats->FUNC.last_params.ARG`, se référer aux fichiers header cités ci-dessus pour les noms des arguments de chaque appel), et l'éventuelle dernière valeur de retour (`stats->FUNC.last_return`). Pour des appels systèmes modifiant un buffer, celui-ci est également enregistré (voir par exemple `fstat`).
 
 ### Interception d'appels
 
@@ -126,20 +126,20 @@ void test_write_fail() {
 	system("echo -n ABCDEF > f.dat");
 	int ret = -1000;
 
-	SANDBOX_BEGIN;
+	begin_sandbox();
 	ret = insert("f.dat",3,c,strlen(c));
-	SANDBOX_END;
+	end_sandbox();
 	CU_ASSERT_EQUAL(ret, 0);
 
 	ret = -1000;
-	monitored.write = true;
+	monitored->write = true;
 	failures.write=FAIL_FIRST;
 	failures.write_ret=-1;
 	failures.write_errno=EIO;
 
-	SANDBOX_BEGIN;
+	begin_sandbox();
 	ret=insert("f.dat",1,c,strlen(c));
-	SANDBOX_END; 
+	end_sandbox();
 	CU_ASSERT_EQUAL(ret,-1);
 
 	system("rm f.dat");

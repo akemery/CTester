@@ -14,28 +14,25 @@ void test_myfunc_ret() {
     int ret = 0, fd;
     
     
-    monitored(GETPID);
+    monitored->getpid = true;
     begin_sandbox();
     ret = my_getpid_func();
     end_sandbox();
     
-    monitored(CREAT);
-    monitored(READ);
-    monitored(WRITE);
-    monitored(CLOSE);
+    monitored->creat = true;
+    monitored->read = true;
+    monitored->write = true;
+    monitored->close = true;
+    monitored->getpid = false;
     begin_sandbox();
     fd = my_creat_func();
     ret = my_write_func(fd);
     ret = my_read_func(fd);
     my_close_func(fd);
+    ret = my_getpid_func();
     end_sandbox();
     
-    getstats(WRITE);
-    getstats(GETPID);
-    getstats(CREAT);
-    getstats(READ);
-    getstats(CLOSE);
-    
+    fprintf(stderr, "%d %d %llu, %d\n", stats->write.called, stats->getpid.called, stats->write.last_params.fd, monitored->write);
     bpfctester_cleanup();
     CU_ASSERT_EQUAL(ret,25);
 }

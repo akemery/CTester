@@ -32,6 +32,9 @@
 //extern struct wrap_fail_t failures;
 //extern struct wrap_log_t logs;
 
+extern struct stats *stats;
+extern struct monitored *monitored;
+
 extern sigjmp_buf segv_jmp;
 
 int true_stderr;
@@ -68,6 +71,7 @@ void set_test_metadata(char *problem, char *descr, unsigned int weight)
     strncpy(test_metadata.descr, descr, sizeof(test_metadata.descr));
     bpfctester_init();
     bpfctester_register_proc(getpid());
+    bpfctester_init_stats();
 }
 
 void push_info_msg(char *msg)
@@ -353,14 +357,4 @@ int run_tests(int argc, char *argv[], void *tests[], int nb_tests) {
     //CU_automated_run_tests();
     CU_cleanup_registry();
     return CU_get_error();
-}
-
-/** eBPF calls**/
-
-void monitored(int syscall){
-    bpfctester_enable_syscall(syscall);
-}
-
-void getstats(int syscall){
-    bpfctester_getstats(syscall);
 }

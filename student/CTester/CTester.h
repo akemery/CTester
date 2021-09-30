@@ -44,5 +44,8 @@ int stdout_cpy, stderr_cpy;
 
 sigjmp_buf segv_jmp;
 
-void monitored(int syscall);
+struct stats *stats;
+struct monitored *monitored;
+
+void monitored_(int syscall);
 void getstats(int syscall);

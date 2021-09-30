@@ -12,8 +12,12 @@
 #include "bpfctester.skel.h"
 
 
+
 struct ring_buffer *rb = NULL;
 struct bpfctester_bpf *skel; 
+
+extern struct stats *stats;
+extern struct monitored *monitored;
 
 static struct env {
     bool verbose;
@@ -59,71 +63,7 @@ int bpfctester_register_proc(pid_t pid){
     return 0;
 }
 
-int bpfctester_enable_syscall(int syscall){
-    switch(syscall){
-        case WRITE:
-            MONITORING(write,true);
-            return 0;
-        case READ:
-            MONITORING(read,true);
-            return 0;
-        case OPEN:
-            MONITORING(open,true);
-            return 0;
-        case CLOSE:
-            MONITORING(close,true);
-            return 0;
-        case CREAT:
-            MONITORING(creat,true);
-            return 0;
-        case STAT:
-            MONITORING(stat,true);
-            return 0;
-        case FSTAT:
-            MONITORING(fstat,true);
-            return 0;
-        case LSEEK:
-            MONITORING(lseek,true);
-            return 0;
-        case GETPID:
-            MONITORING(getpid,true);
-            return 0;
-    }
-    return -1;
-}
 
-int bpfctester_disable_syscall(int syscall){
-    switch(syscall){
-        case WRITE:
-            MONITORING(write,false);
-            return 0;
-        case READ:
-            MONITORING(read,false);
-            return 0;
-        case OPEN:
-            MONITORING(open,false);
-            return 0;
-        case CLOSE:
-            MONITORING(close,false);
-            return 0;
-        case CREAT:
-            MONITORING(creat,false);
-            return 0;
-        case STAT:
-            MONITORING(stat,false);
-            return 0;
-        case FSTAT:
-            MONITORING(fstat,false);
-            return 0;
-        case LSEEK:
-            MONITORING(lseek,false);
-            return 0;
-        case GETPID:
-            MONITORING(getpid,false);
-            return 0;
-    }
-    return 0;
-}
 
 void begin_sandbox(void){
     BEGIN_SANDBOX;
@@ -133,26 +73,7 @@ void end_sandbox(void){
     END_SANDBOX;
 }
 
-int bpfctester_getstats(int syscall){
-    switch(syscall){
-        case WRITE:
-            fprintf(stderr, "write %lld::%d\n", GET_STATS(write).lastret, GET_STATS(write).ncalled);
-            break;
-        case READ:
-            fprintf(stderr, "read %lld::%d\n", GET_STATS(read).lastret, GET_STATS(read).ncalled);
-            break;
-        case GETPID:
-            fprintf(stderr, "getpid %d::%d\n", GET_STATS(getpid).lastret, GET_STATS(getpid).ncalled);
-            break; 
-        case CREAT:
-            fprintf(stderr, "creat %lld::%d\n", GET_STATS(creat).lastret, GET_STATS(creat).ncalled);
-            break; 
-        case CLOSE:
-            fprintf(stderr, "close %lld::%d\n", GET_STATS(close).lastret, GET_STATS(close).ncalled);
-            break; 
-    }
-    return 0;
-}
+
 
 static int init_sandbox(){
     int err;
@@ -179,5 +100,12 @@ static int init_sandbox(){
         return err;
     }
     memset(&skel->bss->ctester_stats, 0, sizeof(skel->bss->ctester_stats));
+    fprintf(stderr, "  %p  ", &skel->bss->ctester_cfg);
     return 0;
+}
+
+int bpfctester_init_stats(void){
+   stats = (struct stats*) &skel->bss->ctester_stats;
+   monitored = (struct monitored*) &skel->bss->ctester_cfg;
+   return 0;
 }

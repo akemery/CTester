@@ -15,7 +15,6 @@ struct {
 struct {
   bool monitored;
   __u32 prog_pid;
-  bool getpid;
   bool monitoring_open;
   bool monitoring_creat;
   bool monitoring_close;
@@ -57,10 +56,10 @@ int tracepoint__syscalls__sys_enter_open(struct trace_event_raw_sys_enter* ctx){
     if(!ctester_cfg.prog_pid || ctester_cfg.prog_pid!=pid)
         return -1;
     args = (struct syscall_enter_open_args *)ctx;
-    ctester_stats.stats_open.lastparams.__syscall_nr = args->__syscall_nr;
-    ctester_stats.stats_open.lastparams.mode = args->mode;
-    ctester_stats.stats_open.lastparams.flags = args->flags;
-    ctester_stats.stats_open.lastparams.filename_ptr = args->filename_ptr;
+    ctester_stats.stats_open.last_params.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_open.last_params.mode = args->mode;
+    ctester_stats.stats_open.last_params.flags = args->flags;
+    ctester_stats.stats_open.last_params.filename_ptr = args->filename_ptr;
     return 0;
 }
 
@@ -77,9 +76,9 @@ int tracepoint__syscalls__sys_exit_open(struct trace_event_raw_sys_exit* ctx){
     if(!ctester_cfg.prog_pid || ctester_cfg.prog_pid!=pid)
         return -1;
     args = (struct syscall_exit_open_args*)ctx;
-    ctester_stats.stats_open.lastparams.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_open.last_params.__syscall_nr = args->__syscall_nr;
     ctester_stats.stats_open.lastret = args->ret;
-    ctester_stats.stats_open.ncalled++;
+    ctester_stats.stats_open.called++;
     return 0;
 }
 
@@ -96,10 +95,10 @@ int tracepoint__syscalls__sys_enter_write(struct trace_event_raw_sys_enter* ctx)
     if(!ctester_cfg.prog_pid || ctester_cfg.prog_pid!=pid)
         return -1;
     args = (struct syscall_enter_write_args*)ctx;
-    ctester_stats.stats_write.lastparams.__syscall_nr = args->__syscall_nr;
-    ctester_stats.stats_write.lastparams.fd = args->fd;
-    ctester_stats.stats_write.lastparams.count = args->count;
-    ctester_stats.stats_write.lastparams.buf = args->buf;
+    ctester_stats.stats_write.last_params.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_write.last_params.fd = args->fd;
+    ctester_stats.stats_write.last_params.count = args->count;
+    ctester_stats.stats_write.last_params.buf = args->buf;
     return 0;
 }
 
@@ -117,8 +116,8 @@ int tracepoint__syscalls__sys_exit_write(struct trace_event_raw_sys_exit* ctx){
        return -1;
     args = (struct syscall_exit_write_args*)ctx;
     ctester_stats.stats_write.lastret = args->ret;
-    ctester_stats.stats_write.lastparams.__syscall_nr = args->__syscall_nr;
-    ctester_stats.stats_write.ncalled++;
+    ctester_stats.stats_write.last_params.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_write.called++;
     return 0;
 }
 
@@ -135,8 +134,8 @@ int tracepoint__syscalls__sys_enter_close(struct trace_event_raw_sys_enter* ctx)
     if(!ctester_cfg.prog_pid || ctester_cfg.prog_pid!=pid)
         return -1;
     args = (struct syscall_enter_close_args*)ctx;
-    ctester_stats.stats_close.lastparams.fd = args->fd;
-    ctester_stats.stats_close.lastparams.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_close.last_params.fd = args->fd;
+    ctester_stats.stats_close.last_params.__syscall_nr = args->__syscall_nr;
     return 0;
 }
 
@@ -154,8 +153,8 @@ int tracepoint__syscalls__sys_exit_close(struct trace_event_raw_sys_exit* ctx){
         return -1;
     args = (struct syscall_exit_close_args*)ctx;
     ctester_stats.stats_close.lastret = args->ret;
-    ctester_stats.stats_close.lastparams.__syscall_nr = args->__syscall_nr;
-    ctester_stats.stats_close.ncalled++;
+    ctester_stats.stats_close.last_params.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_close.called++;
     return 0;
 }
 
@@ -172,9 +171,9 @@ int tracepoint__syscalls__sys_enter_creat(struct trace_event_raw_sys_enter* ctx)
     if(!ctester_cfg.prog_pid || ctester_cfg.prog_pid!=pid)
         return -1;
     args = (struct syscall_enter_creat_args*)ctx;
-    ctester_stats.stats_creat.lastparams.__syscall_nr = args->__syscall_nr;
-    ctester_stats.stats_creat.lastparams.mode = args->mode;
-    ctester_stats.stats_creat.lastparams.filename_ptr = args->filename_ptr;
+    ctester_stats.stats_creat.last_params.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_creat.last_params.mode = args->mode;
+    ctester_stats.stats_creat.last_params.filename_ptr = args->filename_ptr;
     return 0;
 }
 
@@ -192,8 +191,8 @@ int tracepoint__syscalls__sys_exit_creat(struct trace_event_raw_sys_exit* ctx){
         return -1;
     args = (struct syscall_exit_creat_args*)ctx;
     ctester_stats.stats_creat.lastret = args->ret;
-    ctester_stats.stats_creat.lastparams.__syscall_nr = args->__syscall_nr;
-    ctester_stats.stats_creat.ncalled++;
+    ctester_stats.stats_creat.last_params.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_creat.called++;
     return 0;
 }
 
@@ -210,10 +209,10 @@ int tracepoint__syscalls__sys_enter_read(struct trace_event_raw_sys_enter* ctx){
     if(!ctester_cfg.prog_pid || ctester_cfg.prog_pid!=pid)
         return -1;
     args = (struct syscall_enter_read_args*)ctx;
-    ctester_stats.stats_read.lastparams.__syscall_nr = args->__syscall_nr;
-    ctester_stats.stats_read.lastparams.fd = args->fd;
-    ctester_stats.stats_read.lastparams.buf = args->buf;
-    ctester_stats.stats_read.lastparams.count = args->count;
+    ctester_stats.stats_read.last_params.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_read.last_params.fd = args->fd;
+    ctester_stats.stats_read.last_params.buf = args->buf;
+    ctester_stats.stats_read.last_params.count = args->count;
     return 0;
 }
 
@@ -230,9 +229,9 @@ int tracepoint__syscalls__sys_exit_read(struct trace_event_raw_sys_exit* ctx){
     if(!ctester_cfg.prog_pid || ctester_cfg.prog_pid!=pid)
         return -1;
     args = (struct syscall_exit_read_args*)ctx;
-    ctester_stats.stats_read.lastparams.__syscall_nr = args->__syscall_nr;
+    ctester_stats.stats_read.last_params.__syscall_nr = args->__syscall_nr;
     ctester_stats.stats_read.lastret = args->ret;
-    ctester_stats.stats_read.ncalled++;
+    ctester_stats.stats_read.called++;
     return 0;
 }
 
@@ -251,6 +250,6 @@ int tracepoint__syscalls__sys_exit_getpid(struct trace_event_raw_sys_exit* ctx){
         return -1;
     args = (struct syscall_exit_getpid_args*)ctx;
     ctester_stats.stats_getpid.lastret = args->ret;
-    ctester_stats.stats_getpid.ncalled++;
+    ctester_stats.stats_getpid.called++;
     return 0;
 }

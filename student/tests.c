@@ -15,22 +15,24 @@ void test_myfunc_ret() {
     
     
     monitored->getpid = true;
-    begin_sandbox();
+    SANDBOX_BEGIN;
     ret = my_getpid_func();
-    end_sandbox();
+    SANDBOX_END;
     
     monitored->creat = true;
     monitored->read = true;
     monitored->write = true;
     monitored->close = true;
     monitored->getpid = false;
-    begin_sandbox();
+    banned.write = false;
+    banned.getpid = true;
+    SANDBOX_BEGIN;
     fd = my_creat_func();
     ret = my_write_func(fd);
     ret = my_read_func(fd);
     my_close_func(fd);
-    ret = my_getpid_func();
-    end_sandbox();
+    //ret = my_getpid_func();
+    SANDBOX_END;
     
     fprintf(stderr, "%d %d %llu, %d\n", stats->write.called, stats->getpid.called, stats->write.last_params.fd, monitored->write);
     //bpfctester_cleanup();
@@ -48,13 +50,13 @@ void test_myfunc2_ret() {
     monitored->write = true;
     monitored->close = true;
     monitored->getpid = false;
-    begin_sandbox();
+    SANDBOX_BEGIN;
     fd = my_creat_func();
     ret = my_write_func(fd);
     ret = my_read_func(fd);
     my_close_func(fd);
     ret = my_getpid_func();
-    end_sandbox();
+    SANDBOX_END;
     
     fprintf(stderr, "%d %d %llu, %d\n", stats->write.called, stats->getpid.called, stats->write.last_params.fd, monitored->write);
     release_resource();

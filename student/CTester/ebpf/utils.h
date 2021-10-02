@@ -11,8 +11,8 @@ int bpfctester_cleanup();
 int bpfctester_register_proc(pid_t pid);
 int bpfctester_enable_syscall(int syscall);
 int bpfctester_disable_syscall(int syscall);
-void begin_sandbox(void);
-void end_sandbox(void);
+void bpfctester_disable_monitoring(void);
+void bpfctester_enable_monitoring(void);
 
 int bpfctester_init_kernel_data(void);
 void release_resource(void);
@@ -45,6 +45,23 @@ struct monitored {
   bool getpid;
   bool start_student_code;
   bool end_student_code;
+};
+
+struct banned {
+  bool open;
+  bool creat;
+  bool close;
+  bool read;
+  bool write;
+  bool stat;
+  bool fstat;
+  bool lseek;
+  bool free;
+  bool malloc;
+  bool calloc;
+  bool realloc;
+  bool sleep;
+  bool getpid;
 };
 
 

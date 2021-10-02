@@ -46,6 +46,4 @@ sigjmp_buf segv_jmp;
 
 struct stats *stats;
 struct monitored *monitored;
-
-void monitored_(int syscall);
-void getstats(int syscall);
+struct banned banned;

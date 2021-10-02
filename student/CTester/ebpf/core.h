@@ -3,8 +3,8 @@
 
 #define MONITORING(s,y)  skel->bss->ctester_cfg.monitoring_ ## s = y
 #define SET_MONITORED_PID(pid)  skel->bss->ctester_cfg.prog_pid = pid
-#define BEGIN_SANDBOX  skel->bss->ctester_cfg.monitored = true
-#define END_SANDBOX  skel->bss->ctester_cfg.monitored = false
+#define ENABLE_MONITORING  skel->bss->ctester_cfg.monitored = true
+#define DISABLE_MONITORING  skel->bss->ctester_cfg.monitored = false
 #define GET_STATS(s)  skel->bss->ctester_stats.stats_ ## s
 
 

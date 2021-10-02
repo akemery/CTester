@@ -64,12 +64,12 @@ int bpfctester_register_proc(pid_t pid){
 
 
 
-void begin_sandbox(void){
-    BEGIN_SANDBOX;
+void bpfctester_enable_monitoring(void){
+    ENABLE_MONITORING;
 }
 
-void end_sandbox(void){
-    END_SANDBOX;
+void bpfctester_disable_monitoring(void){
+    DISABLE_MONITORING;
 }
 
 

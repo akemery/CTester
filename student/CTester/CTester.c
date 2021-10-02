@@ -21,6 +21,7 @@
 #define _(STRING) gettext(STRING)
 #include <dlfcn.h>
 #include <malloc.h>
+#include <seccomp.h>
 #include "ebpf/utils.h"
 
 #define TAGS_NB_MAX 20
@@ -34,6 +35,7 @@
 
 extern struct stats *stats;
 extern struct monitored *monitored;
+extern struct banned banned;
 
 extern sigjmp_buf segv_jmp;
 
@@ -47,6 +49,12 @@ struct itimerval it_val;
 CU_pSuite pSuite = NULL;
 
 static bool bpf_initialized = false;
+
+/*seccomp part*/
+static int ctester_seccomp_init(void);
+static void ctester_seccomp_release(void);
+static int ctester_seccomp_add_rules(void);
+static scmp_filter_ctx ctx = NULL;
 
 
 struct info_msg {
@@ -76,6 +84,9 @@ void set_test_metadata(char *problem, char *descr, unsigned int weight)
         bpfctester_register_proc(getpid());
         bpfctester_init_kernel_data();
         bpf_initialized = true;
+        ctester_seccomp_init();
+        memset(&banned, 0, sizeof(struct banned));
+        fprintf(stderr, "Initialized data first time\n");
     }
 }
 
@@ -119,25 +130,35 @@ void set_tag(char *tag)
 }
 
 void segv_handler(int sig, siginfo_t *unused, void *unused2) {
-    //wrap_monitoring = false;
+    bpfctester_disable_monitoring();
     push_info_msg(_("Your code produced a segfault."));
     set_tag("sigsegv");
-    //wrap_monitoring = true;
+    bpfctester_enable_monitoring();
     siglongjmp(segv_jmp, 1);
 }
 
 void alarm_handler(int sig, siginfo_t *unused, void *unused2)
 {
-    //wrap_monitoring = false;
+    bpfctester_disable_monitoring();
     push_info_msg(_("Your code exceeded the maximal allowed execution time."));
     set_tag("timeout");
-    //wrap_monitoring = true;
+    bpfctester_enable_monitoring();
     siglongjmp(segv_jmp, 1);
+}
+
+void trap_handler(int sig, siginfo_t *unused, void *unused2){
+    bpfctester_disable_monitoring();
+    push_info_msg(_("Your code exceeded called banned banned system call"));
+    set_tag("trapped banned syscall");
+    fprintf(stderr, "trapped banned syscall\n");
+    bpfctester_enable_monitoring();
+    
 }
 
 
 int sandbox_begin()
 {
+    int rc;
     // Start timer
     it_val.it_value.tv_sec = 2;
     it_val.it_value.tv_usec = 0;
@@ -155,6 +176,15 @@ int sandbox_begin()
     while ((n = read(usr_pipe_stderr[0], buf, BUFSIZ)) > 0);
 
     //wrap_monitoring = true;
+    bpfctester_enable_monitoring();
+    rc = ctester_seccomp_add_rules();
+    if(rc < 0){
+        fprintf(stderr, "adding rules failed\n");
+    }
+    rc = seccomp_load(ctx);
+    if(rc < 0){
+        fprintf(stderr, "loading filter failed\n");
+    }
     return 0;
 }
 
@@ -196,6 +226,7 @@ void sandbox_end()
     it_val.it_interval.tv_sec = 0;
     it_val.it_interval.tv_usec = 0;
     setitimer(ITIMER_REAL, &it_val, NULL);
+    bpfctester_disable_monitoring();
 }
 
 
@@ -260,18 +291,23 @@ int run_tests(int argc, char *argv[], void *tests[], int nb_tests) {
         .ss_sp = stack,
     };
 
-    sa.sa_flags     = SA_NODEFER|SA_ONSTACK|SA_RESTART;
+    sa.sa_flags     = SA_NODEFER|SA_ONSTACK|SA_RESTART|SA_SIGINFO | SA_NODEFER;
     sa.sa_sigaction = segv_handler;
     sigaltstack(&ss, 0);
     sigfillset(&sa.sa_mask);
     int ret = sigaction(SIGSEGV, &sa, NULL);
     if (ret)
         return ret;
+        
     sa.sa_sigaction = alarm_handler;
     ret = sigaction(SIGALRM, &sa, NULL);
     if (ret)
         return ret;
-
+        
+    sa.sa_sigaction = trap_handler;
+    ret = sigaction(SIGSYS, &sa, NULL);
+    if (ret)
+        return ret;
 
     /* Output file containing succeeded / failed tests */
     FILE* f_out = fopen("results.txt", "w");
@@ -366,4 +402,67 @@ int run_tests(int argc, char *argv[], void *tests[], int nb_tests) {
 
 void release_resource(void){
     bpfctester_cleanup();
+    ctester_seccomp_release();
+}
+
+static int ctester_seccomp_init(void){
+    ctx = seccomp_init(SCMP_ACT_ALLOW);
+    if (ctx == NULL)
+        return ENOMEM;
+    return 0;  
+}
+
+static void ctester_seccomp_release(void){
+    seccomp_release(ctx);
+}
+
+
+static int ctester_seccomp_add_rules(void){
+    int rc = -1;
+    if(banned.write){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_TRAP, SCMP_SYS(write), 0);
+        if(rc < 0) return rc;
+    }
+    if(banned.open){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_TRAP, SCMP_SYS(open), 0);
+        if(rc < 0) return rc;
+    }
+    if(banned.creat){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_TRAP, SCMP_SYS(creat), 0);
+        if(rc < 0) return rc;
+    }
+    if(banned.close){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_TRAP, SCMP_SYS(close), 0);
+        if(rc < 0) return rc;
+    }
+    if(banned.getpid){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_TRAP, SCMP_SYS(getpid), 0);
+        if(rc < 0) return rc;
+    }
+    if(banned.read){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_TRAP, SCMP_SYS(read), 0);
+        if(rc < 0) return rc;
+    }
+    if(banned.stat){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_TRAP, SCMP_SYS(stat), 0);
+        if(rc < 0) return rc;
+    }
+    if(banned.fstat){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_TRAP, SCMP_SYS(fstat), 0);
+        if(rc < 0) return rc;
+    }
+    /*if(banned.sleep){
+        rc = seccomp_rule_add(ctx, 
+            SCMP_ACT_KILL_PROCESS, SCMP_SYS(sleep), 0);
+        if(rc < 0) return rc;
+    }*/
+    return 0;
 }

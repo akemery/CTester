@@ -1,5 +1,6 @@
 #ifndef __SYSCALL_ARGS_H__
 #define __SYSCALL_ARGS_H__
+#include "../ebpf/vmlinux.h"
 
 struct syscall_enter_open_args{
     unsigned long long unused;
@@ -180,7 +181,98 @@ struct stats_getpid{
     int called;    
 };
 
+struct stats_accept{
+    struct sockaddr* addr;
+    int called;
+    int lastret;
+};
 
-#define MONITORING_LSEEK  0x40
+struct stats_bind{
+    struct sockaddr* addr;
+    int called;
+    int lastret;
+};
+
+struct stats_listen{
+    int sockfd;
+    int backlog;
+    int called;
+    int lastret;
+};
+
+struct stats_connect{
+    struct sockaddr* addr;
+    int lastret;
+    int called;
+};
+
+struct  stats_poll{
+    struct pollfd*  ufds;
+    int nfds;
+    int timeout;
+    int called;
+    int lastret;
+};
+
+struct stats_recvfrom{
+    int fd;
+    void* ubuf;
+    int size;
+    int flags;
+    struct sockaddr* addr;
+    int* addr_len;
+    int called;
+    int lastret;
+};
+
+struct stats_recvmsg{
+    int fd;
+    struct user_msghdr* msg;
+    int flags;
+    int called;
+    int lastret;
+};
+
+struct stats_select{
+    int fd;
+    fd_set* readfds;
+    fd_set* writefds;
+    fd_set* exceptfds;
+    int called;
+    int lastret;
+};
+
+struct stats_sendto{
+    int fd;
+    void* buf;
+    int len;
+    int flags;
+    struct sockaddr* addr;
+    int addr_len;
+    int lastret;
+    int called;
+};
+
+struct stats_sendmsg{
+    int fd;
+    int flags;
+    int called;
+    int lastret;
+};
+
+struct stats_shutdown{
+    int fd;
+    int how;
+    int lastret;
+    int called;
+};
+
+struct stats_socket{
+    int family;
+    int type;
+    int protocol;
+    int lastret;
+    int called;
+};
 
 #endif //__SYSCALL_ARGS_H__
